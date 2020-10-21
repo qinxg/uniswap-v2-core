@@ -12,8 +12,8 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     using SafeMath  for uint;
     using UQ112x112 for uint224;
 
-    uint public constant MINIMUM_LIQUIDITY = 10**3;
-    bytes4 private constant SELECTOR = bytes4(keccak256(bytes('transfer(address,uint256)')));
+    uint public constant MINIMUM_LIQUIDITY = 10**3; //1000
+    bytes4 private constant SELECTOR = bytes4(keccak256(bytes('transfer(address,uint256)'))); //transfer对应函数的地址
 
     address public factory;
     address public token0;
@@ -35,19 +35,26 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         unlocked = 1;
     }
 
+    //获取资产储备情况 ，以及最后一个更新的区块时间
     function getReserves() public view returns (uint112 _reserve0, uint112 _reserve1, uint32 _blockTimestampLast) {
         _reserve0 = reserve0;
         _reserve1 = reserve1;
         _blockTimestampLast = blockTimestampLast;
     }
 
+    //转账..
     function _safeTransfer(address token, address to, uint value) private {
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(SELECTOR, to, value));
+        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(SELECTOR, to, value)); //调用地址上的转账函数进行转账
         require(success && (data.length == 0 || abi.decode(data, (bool))), 'UniswapV2: TRANSFER_FAILED');
     }
 
+    //铸币事件
     event Mint(address indexed sender, uint amount0, uint amount1);
+
+    //销毁事件
     event Burn(address indexed sender, uint amount0, uint amount1, address indexed to);
+
+    //交换事件
     event Swap(
         address indexed sender,
         uint amount0In,
@@ -58,6 +65,7 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     );
     event Sync(uint112 reserve0, uint112 reserve1);
 
+    //标记来源factory
     constructor() public {
         factory = msg.sender;
     }
@@ -111,6 +119,7 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
         uint balance0 = IERC20(token0).balanceOf(address(this));
         uint balance1 = IERC20(token1).balanceOf(address(this));
+        
         uint amount0 = balance0.sub(_reserve0);
         uint amount1 = balance1.sub(_reserve1);
 
